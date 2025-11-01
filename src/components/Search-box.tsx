@@ -1,69 +1,119 @@
 "use client";
 
-import { navigate } from "next/dist/client/components/segment-cache-impl/navigation";
+import {
+  PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputAttachment,
+  PromptInputAttachments,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputFooter,
+  PromptInputHeader,
+  type PromptInputMessage,
+  PromptInputModelSelect,
+  PromptInputModelSelectContent,
+  PromptInputModelSelectItem,
+  PromptInputModelSelectTrigger,
+  PromptInputModelSelectValue,
+  PromptInputProvider,
+  PromptInputSpeechButton,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from "./ai-elements/prompt-input";
+
+import { GlobeIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useRef, useState } from "react";
 
-export const SearchBox = () => {
-  const { register } = useForm<{ prompt: string }>();
+const models = [
+  { id: "gpt-4", name: "GPT-4" },
+  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
+];
+
+const SUBMITTING_TIMEOUT = 200;
+const STREAMING_TIMEOUT = 2000;
+
+const SearchBox = () => {
+  const [model, setModel] = useState<string>(models[0].id);
   const router = useRouter();
+  const [status, setStatus] = useState<
+    "submitted" | "streaming" | "ready" | "error"
+  >("ready");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleVoiceInput = () => {
+  const handleSubmit = (message: PromptInputMessage) => {
+    const hasText = Boolean(message.text);
+    const hasAttachments = Boolean(message.files?.length);
+
+    if (!(hasText || hasAttachments)) {
+      return;
+    }
+
+    setStatus("submitted");
+
+    // eslint-disable-next-line no-console
+    console.log("Submitting message:", message);
+
+    setTimeout(() => {
+      setStatus("streaming");
+    }, SUBMITTING_TIMEOUT);
+
+    setTimeout(() => {
+      setStatus("ready");
+    }, STREAMING_TIMEOUT);
+
     router.push("/search/voice-input");
-    // Logic for handling voice input goes here
   };
 
   return (
-    <div className="border-gray-50 bg-gray-700 w-2xl h-32 rounded-2xl">
-      <div className="px-3.5 py-2 grid-rows-1fr-auto grid grid-cols-3 h-full">
-        <div className="overflow-hidden relative flex h-full w-full col-start-1 col-end-4 pb-3">
-          <input
-            {...register("prompt")}
-            type="text"
-            placeholder="Ask me anything..."
-            className="border-none  w-full outline-0 text-white"
-          />
-        </div>
-        <div className="flex items-center justify-self-end col-start-3 row-start-2">
-          <button
-            className="
-                focus-visible:bg-subtle hover:bg-subtle text-quiet  hover:text-foreground dark:hover:bg-subtle max-w-24 sm:max-w-none font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-out select-none relative group/button font-semimedium justify-center text-center items-center rounded-lg cursor-pointer active:scale-[0.97] active:duration-150 active:ease-outExpo origin-center whitespace-nowrap inline-flex text-sm h-8 aspect-9/8"
-          >
-            <span className="material-symbols-outlined text-base!">globe</span>
-          </button>
-          <button
-            className="
-                focus-visible:bg-subtle hover:bg-subtle text-quiet  hover:text-foreground dark:hover:bg-subtle max-w-24 sm:max-w-none font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-out select-none relative group/button font-semimedium justify-center text-center items-center rounded-lg cursor-pointer active:scale-[0.97] active:duration-150 active:ease-outExpo origin-center whitespace-nowrap inline-flex text-sm h-8 aspect-9/8"
-          >
-            <span className="material-symbols-outlined text-base!">
-              attach_file
-            </span>
-          </button>
-          <button
-            className="
-                focus-visible:bg-subtle hover:bg-subtle text-quiet  hover:text-foreground dark:hover:bg-subtle max-w-24 sm:max-w-none font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-out select-none relative group/button font-semimedium justify-center text-center items-center rounded-lg cursor-pointer active:scale-[0.97] active:duration-150 active:ease-outExpo origin-center whitespace-nowrap inline-flex text-sm h-8 aspect-9/8"
-          >
-            <span className="material-symbols-outlined text-base!">memory</span>
-          </button>
-          <button
-            className="
-                focus-visible:bg-subtle hover:bg-subtle text-quiet  hover:text-foreground dark:hover:bg-subtle max-w-24 sm:max-w-none font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-out select-none relative group/button font-semimedium justify-center text-center items-center rounded-lg cursor-pointer active:scale-[0.97] active:duration-150 active:ease-outExpo origin-center whitespace-nowrap inline-flex text-sm h-8 aspect-9/8"
-          >
-            <span className="material-symbols-outlined text-base!">mic</span>
-          </button>
-          <div className="bg-amber-700 rounded">
-            <button
-              onClick={handleVoiceInput}
-              className="
-                focus-visible:bg-subtle hover:bg-subtle text-quiet  hover:text-foreground dark:hover:bg-subtle max-w-24 sm:max-w-none font-sans focus:outline-none outline-none outline-transparent transition duration-300 ease-out select-none relative group/button font-semimedium justify-center text-center items-center rounded-lg cursor-pointer active:scale-[0.97] active:duration-150 active:ease-outExpo origin-center whitespace-nowrap inline-flex text-sm h-8 aspect-9/8"
-            >
-              <span className="material-symbols-outlined text-base! ">
-                arrow_forward
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <PromptInputProvider>
+      <PromptInput globalDrop multiple onSubmit={handleSubmit}>
+        <PromptInputHeader>
+          <PromptInputAttachments>
+            {(attachment) => <PromptInputAttachment data={attachment} />}
+          </PromptInputAttachments>
+        </PromptInputHeader>
+        <PromptInputBody>
+          <PromptInputTextarea ref={textareaRef} />
+        </PromptInputBody>
+        <PromptInputFooter>
+          <PromptInputTools>
+            <PromptInputActionMenu>
+              <PromptInputActionMenuTrigger />
+              <PromptInputActionMenuContent>
+                <PromptInputActionAddAttachments />
+              </PromptInputActionMenuContent>
+            </PromptInputActionMenu>
+            <PromptInputSpeechButton textareaRef={textareaRef} />
+            <PromptInputButton>
+              <GlobeIcon size={16} />
+              <span>Search</span>
+            </PromptInputButton>
+            <PromptInputModelSelect onValueChange={setModel} value={model}>
+              <PromptInputModelSelectTrigger>
+                <PromptInputModelSelectValue />
+              </PromptInputModelSelectTrigger>
+              <PromptInputModelSelectContent>
+                {models.map((modelOption) => (
+                  <PromptInputModelSelectItem
+                    key={modelOption.id}
+                    value={modelOption.id}
+                  >
+                    {modelOption.name}
+                  </PromptInputModelSelectItem>
+                ))}
+              </PromptInputModelSelectContent>
+            </PromptInputModelSelect>
+          </PromptInputTools>
+          <PromptInputSubmit status={status} />
+        </PromptInputFooter>
+      </PromptInput>
+    </PromptInputProvider>
   );
 };
+
+export default SearchBox;
