@@ -170,8 +170,8 @@ const ConversationWindow = () => {
   }, []);
 
   return (
-    <Conversation className="relative size-full" style={{ height: "498px" }}>
-      <ConversationContent>
+    <Conversation className="relative size-full">
+      <ConversationContent className="max-w-3xl mx-auto">
         {visibleMessages.length === 0 ? (
           <ConversationEmptyState
             description="Messages will appear here as the conversation progresses."
