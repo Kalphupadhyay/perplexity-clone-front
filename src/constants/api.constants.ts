@@ -18,6 +18,6 @@ export const API_CONSTANTS = {
     CURRENT_USER: `${API.AUTH}/current-user`,
   },
   CHAT: {
-    STREAM: `${API.CHAT}/stream/`,
+    MESSAGE: `${API.CHAT}/message`,
   },
 };

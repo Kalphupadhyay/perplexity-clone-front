@@ -5,7 +5,7 @@ import { IGenericApiResponse } from "../interfaces/generic-response.interface";
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8000/api", // Replace with your API base URL
   timeout: 5000, // Optional timeout
-  withCredentials: true, // Include cookies in requests if needed,
+
   headers: {
     "Content-Type": "application/json",
   },
@@ -113,10 +113,6 @@ export class HTTPMethods {
   }
 
   static post<Req, Res>(url: string, data?: Req, config?: AxiosRequestConfig) {
-    return axiosInstance.post<AxiosResponse<IGenericApiResponse<Res>>>(
-      url,
-      data,
-      config
-    );
+    return axiosInstance.post<IGenericApiResponse<Res>>(url, data, config);
   }
 }

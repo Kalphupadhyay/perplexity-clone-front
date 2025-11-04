@@ -10,8 +10,7 @@ import { Message, MessageAvatar, MessageContent } from "./ai-elements/message";
 import { MessageSquareIcon } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
-import { API_CONSTANTS } from "../constants/api.constants";
-import { Response } from "./ai-elements/response";
+import { ChatService } from "../services/chat.service";
 
 const messages: { key: string; value: string; name: string; avatar: string }[] =
   [
@@ -30,6 +29,7 @@ const messages: { key: string; value: string; name: string; avatar: string }[] =
   ];
 
 const ConversationWindow = () => {
+  const { chatMessage } = ChatService();
   const [visibleMessages, setVisibleMessages] = useState<
     {
       key: string;
@@ -45,43 +45,24 @@ const ConversationWindow = () => {
       avatar: "https://github.com/haydenbleasel.png",
     },
   ]);
-  const [message, setMessage] = useState<any[]>([]);
 
   useEffect(() => {
-    const eventSource = new EventSource(
-      "http://localhost:8000/api/" +
-        API_CONSTANTS.CHAT.STREAM +
-        "?message=Hello how are you"
-    );
-
-    eventSource.onmessage = (event) => {
-      console.log(event);
-      if (event.data == "Done") {
-        eventSource.close();
-      }
-      setMessage((prev) => [...prev, event.data]);
-    };
-
-    eventSource.onerror = (error) => {
-      console.log(error);
-      console.error("SSE connection error");
-      eventSource.close();
-    };
-    return () => {
-      eventSource.close();
-    };
+    getMessage();
   }, []);
 
-  const getStreamedMessage = (name: string) => {
-    setVisibleMessages((prev) => [
-      ...prev,
-      {
-        key: nanoid(),
-        value: "",
-        name: name,
-        avatar: "https://github.com/openai.png",
-      },
-    ]);
+  const getMessage = async () => {
+    const response = await chatMessage("hello how are you");
+    setVisibleMessages((prev) => {
+      return [
+        ...prev,
+        {
+          key: nanoid(),
+          value: response.data,
+          name: "AI Assistant",
+          avatar: "https://github.com/openai.png",
+        },
+      ];
+    });
   };
 
   // useEffect(() => {
@@ -119,15 +100,7 @@ const ConversationWindow = () => {
         ) : (
           visibleMessages.map(({ key, value, name, avatar }, index) => (
             <Message from={index % 2 === 0 ? "user" : "assistant"} key={key}>
-              <MessageContent>
-                {index % 2 === 0
-                  ? value
-                  : message.map((part, i) => {
-                      if (part) {
-                        return <Response key={`${i}`}>{part}</Response>;
-                      }
-                    })}
-              </MessageContent>
+              <MessageContent>{value}</MessageContent>
               <MessageAvatar name={name} src={avatar} />
             </Message>
           ))
