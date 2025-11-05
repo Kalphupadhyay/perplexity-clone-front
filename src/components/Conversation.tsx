@@ -7,28 +7,15 @@ import {
   ConversationScrollButton,
 } from "./ai-elements/conversation";
 import { Message, MessageAvatar, MessageContent } from "./ai-elements/message";
-import { MessageSquareIcon } from "lucide-react";
+import { CopyIcon, MessageSquareIcon, ThumbsUpIcon } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ChatService } from "../services/chat.service";
-
-const messages: { key: string; value: string; name: string; avatar: string }[] =
-  [
-    {
-      key: nanoid(),
-      value: "Hello, how are you?",
-      name: "Alex Johnson",
-      avatar: "https://github.com/haydenbleasel.png",
-    },
-    {
-      key: nanoid(),
-      value: "I'm good, thank you! How can I assist you today?",
-      name: "AI Assistant",
-      avatar: "https://github.com/openai.png",
-    },
-  ];
+import { useInputStore } from "../store/chat.store";
+import { Action, Actions } from "./ai-elements/actions";
 
 const ConversationWindow = () => {
+  const chatStore = useInputStore((state) => state);
   const { chatMessage } = ChatService();
   const [visibleMessages, setVisibleMessages] = useState<
     {
@@ -37,21 +24,26 @@ const ConversationWindow = () => {
       name: string;
       avatar: string;
     }[]
-  >([
-    {
-      key: nanoid(),
-      value: "Hello, how are you?",
-      name: "Alex Johnson",
-      avatar: "https://github.com/haydenbleasel.png",
-    },
-  ]);
+  >([]);
 
   useEffect(() => {
-    getMessage();
-  }, []);
+    setVisibleMessages((prev) => [
+      ...prev,
+      {
+        key: nanoid(),
+        value: chatStore.message,
+        name: "You",
+        avatar: "https://github.com/haydenbleasel.png",
+      },
+    ]);
 
-  const getMessage = async () => {
-    const response = await chatMessage("hello how are you");
+    getMessage(chatStore.message);
+  }, [chatStore.message]);
+
+  const getMessage = async (message: string) => {
+    if (!message) return;
+    chatStore.setIsAiResponding(true);
+    const response = await chatMessage(message);
     setVisibleMessages((prev) => {
       return [
         ...prev,
@@ -63,30 +55,8 @@ const ConversationWindow = () => {
         },
       ];
     });
+    chatStore.setIsAiResponding(false);
   };
-
-  // useEffect(() => {
-  //   let currentIndex = 0;
-  //   const interval = setInterval(() => {
-  //     if (currentIndex < messages.length && messages[currentIndex]) {
-  //       const currentMessage = messages[currentIndex];
-  //       setVisibleMessages((prev) => [
-  //         ...prev,
-  //         {
-  //           key: currentMessage.key,
-  //           value: currentMessage.value,
-  //           name: currentMessage.name,
-  //           avatar: currentMessage.avatar,
-  //         },
-  //       ]);
-  //       currentIndex++;
-  //     } else {
-  //       clearInterval(interval);
-  //     }
-  //   }, 500);
-
-  //   return () => clearInterval(interval);
-  // }, []);
 
   return (
     <Conversation className="relative size-full">
@@ -99,13 +69,29 @@ const ConversationWindow = () => {
           />
         ) : (
           visibleMessages.map(({ key, value, name, avatar }, index) => (
-            <Message from={index % 2 === 0 ? "user" : "assistant"} key={key}>
-              <MessageContent>{value}</MessageContent>
-              <MessageAvatar name={name} src={avatar} />
-            </Message>
+            <div key={key}>
+              <Message from={name == "You" ? "user" : "assistant"}>
+                <MessageContent>{value}</MessageContent>
+                <MessageAvatar name={name} src={avatar} />
+              </Message>
+              {name === "AI Assistant" && (
+                <Actions className="mt-2">
+                  <Action label="Like">
+                    <ThumbsUpIcon className="size-4" />
+                  </Action>
+                  <Action
+                    onClick={() => navigator.clipboard.writeText(value)}
+                    label="Copy"
+                  >
+                    <CopyIcon className="size-4" />
+                  </Action>
+                </Actions>
+              )}
+            </div>
           ))
         )}
       </ConversationContent>
+
       <ConversationScrollButton />
     </Conversation>
   );

@@ -1,7 +1,7 @@
 import { ChatInput } from "@/src/components/Chat-input";
 import ConversationWindow from "@/src/components/Conversation";
 
-export default function SearchPage({ params }: { params: { search: string } }) {
+export default function SearchPage() {
   return (
     <div className="flex h-screen flex-col  bg-zinc-50 font-sans dark:bg-black relative">
       <div className="h-7 mt-2 z-10 w-full">
@@ -17,7 +17,7 @@ export default function SearchPage({ params }: { params: { search: string } }) {
           <ChatInput />
           <div className="my-2">
             <p className="text-center text-sm">
-              Perplexity clone can make mistakes{" "}
+              Perplexity clone can make mistakes
             </p>
           </div>
         </div>

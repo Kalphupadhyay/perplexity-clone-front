@@ -1,34 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
   PromptInputActionMenu,
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
-  PromptInputAttachment,
-  PromptInputAttachments,
   PromptInputBody,
   PromptInputButton,
   PromptInputFooter,
-  PromptInputHeader,
   type PromptInputMessage,
-  PromptInputProvider,
   PromptInputSpeechButton,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
 } from "./ai-elements/prompt-input";
 import { GlobeIcon } from "lucide-react";
-
-const SUBMITTING_TIMEOUT = 200;
-const STREAMING_TIMEOUT = 2000;
+import { useInputStore } from "../store/chat.store";
 
 export const ChatInput = () => {
-  const [status, setStatus] = useState<
-    "submitted" | "streaming" | "ready" | "error"
-  >("ready");
+  const chatStore = useInputStore((state) => state);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (message: PromptInputMessage) => {
@@ -39,17 +31,9 @@ export const ChatInput = () => {
       return;
     }
 
-    setStatus("submitted");
+    if (chatStore.isAiResponding) return;
 
-    console.log("Submitting message:", message);
-
-    setTimeout(() => {
-      setStatus("streaming");
-    }, SUBMITTING_TIMEOUT);
-
-    setTimeout(() => {
-      setStatus("ready");
-    }, STREAMING_TIMEOUT);
+    chatStore.addMessage(message.text!);
   };
 
   return (
@@ -71,7 +55,7 @@ export const ChatInput = () => {
             <span>Search</span>
           </PromptInputButton>
         </PromptInputTools>
-        <PromptInputSubmit status={status} />
+        <PromptInputSubmit />
       </PromptInputFooter>
     </PromptInput>
   );
